@@ -8,6 +8,25 @@ const characterResponse = {
   })) }] },
 };
 
+it("확정 저장 중 선택이 바뀌면 새 선택은 검토 전 상태를 유지한다", async () => {
+  let release = () => {};
+  const barrier = new Promise<void>(resolve => { release = resolve; });
+  let delay = false;
+  const session = createTestSchedulerWorkspaceSession({ nexonResponse: characterResponse, beforeWorkspaceSave: () => delay ? barrier : Promise.resolve() });
+  await session.workspace.connectApiKey("test-key");
+  await session.workspace.setCharacterActive("character-0", true);
+  await session.workspace.reviewSelection();
+  delay = true;
+  const confirming = session.workspace.confirmSelection();
+  const editing = session.workspace.setCharacterActive("character-1", true);
+  release();
+  await Promise.all([confirming, editing]);
+  expect(session.workspace.getState()).toMatchObject({ selectionPhase: "editing", selectedIds: ["character-0", "character-1"] });
+  const reopened = session.reopen();
+  await reopened.initialize();
+  expect(reopened.getState()).toMatchObject({ selectionPhase: "editing", selectedIds: ["character-0", "character-1"] });
+});
+
 it("손상된 저장 데이터는 삭제하거나 새 목록으로 덮어쓰지 않는다", async () => {
   const session = createTestSchedulerWorkspaceSession({ storedApiKey: "test-key", storedWorkspace: { version: 999 }, nexonResponse: characterResponse });
   await session.workspace.initialize();
@@ -65,7 +84,7 @@ it("최대 10개만 활성 추적으로 선택하고 해제한 캐릭터는 목�
   const { workspace } = createTestSchedulerWorkspaceSession({ nexonResponse: characterResponse });
   await workspace.connectApiKey("test-key");
   for (let index = 0; index < 11; index++) await workspace.setCharacterActive(`character-${index}`, true);
-  expect(workspace.getState()).toMatchObject({ selectedIds: Array.from({ length: 10 }, (_, index) => `character-${index}`), selectionError: "활성 추적 캐릭터는 최대 10개까지 선택할 수 있습니다." });
+  expect(workspace.getState()).toMatchObject({ selectedIds: Array.from({ length: 10 }, (_, index) => `character-${index}`), selectionError: "활성 추적 캐릭터는 최대 10개까지 선택할 수 있습니다. (SELECTION_LIMIT_REACHED)" });
   await workspace.setCharacterActive("character-0", false);
   expect(workspace.getState()).toMatchObject({ characters: expect.arrayContaining([expect.objectContaining({ id: "character-0" })]), selectedIds: expect.not.arrayContaining(["character-0"]) });
 });

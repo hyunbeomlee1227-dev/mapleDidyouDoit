@@ -14,6 +14,7 @@ type TestSchedulerWorkspaceOptions = Readonly<{
   storedApiKey?: string;
   workspaceSaveFailure?: boolean;
   storedWorkspace?: unknown;
+  beforeWorkspaceSave?: () => Promise<void>;
 }>;
 
 export function createTestSchedulerWorkspaceSession(
@@ -36,6 +37,7 @@ export function createTestSchedulerWorkspaceSession(
   const storage: WorkspaceStorage = {
     load: async () => storedValue,
     save: async (value) => {
+      await options.beforeWorkspaceSave?.();
       if (options.workspaceSaveFailure) throw new Error("Workspace storage unavailable");
       storedValue = value;
     },

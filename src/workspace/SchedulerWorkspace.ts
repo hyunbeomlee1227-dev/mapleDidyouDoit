@@ -104,6 +104,7 @@ export function createSchedulerWorkspace(
   };
 
   let saveQueue = Promise.resolve(true);
+  let selectionRevision = 0;
   const persistSelection = (phase?: "confirmed") => {
     if (state.screen !== "api-key-connected" || !state.characters) return Promise.resolve(false);
     const snapshot = { version: 1, characters: state.characters, selectedIds: state.selectedIds ?? [], selectionPhase: phase ?? state.selectionPhase ?? "editing" };
@@ -148,13 +149,14 @@ export function createSchedulerWorkspace(
       if (index < 0 || !Number.isInteger(destinationIndex) || destinationIndex < 0 || destinationIndex >= selectedIds.length) return;
       selectedIds.splice(index, 1);
       selectedIds.splice(destinationIndex, 0, id);
+      selectionRevision++;
       updateState({ ...state, selectedIds, selectionPhase: "editing", selectionError: undefined });
       await persistSelection();
     },
     async reviewSelection() {
       if (state.screen !== "api-key-connected") return;
       if (!state.selectedIds?.length) {
-        updateState({ ...state, selectionError: "활성 추적 캐릭터를 1개 이상 선택해 주세요." });
+        updateState({ ...state, selectionError: "활성 추적 캐릭터를 1개 이상 선택해 주세요. (SELECTION_REQUIRED)" });
         return;
       }
       updateState({ ...state, selectionPhase: "review", selectionError: undefined });
@@ -162,16 +164,18 @@ export function createSchedulerWorkspace(
     },
     async confirmSelection() {
       if (state.screen !== "api-key-connected" || state.selectionPhase !== "review") return;
+      const reviewedRevision = selectionRevision;
       const saved = await persistSelection("confirmed");
-      if (saved && state.screen === "api-key-connected") updateState({ ...state, selectionPhase: "confirmed", selectionError: undefined });
+      if (saved && selectionRevision === reviewedRevision && state.screen === "api-key-connected") updateState({ ...state, selectionPhase: "confirmed", selectionError: undefined });
     },
     async setCharacterActive(id, active) {
       if (state.screen !== "api-key-connected" || !state.characters?.some(character => character.id === id)) return;
       const selectedIds = state.selectedIds ?? [];
       if (active && !selectedIds.includes(id) && selectedIds.length >= 10) {
-        updateState({ ...state, selectionError: "활성 추적 캐릭터는 최대 10개까지 선택할 수 있습니다." });
+        updateState({ ...state, selectionError: "활성 추적 캐릭터는 최대 10개까지 선택할 수 있습니다. (SELECTION_LIMIT_REACHED)" });
         return;
       }
+      selectionRevision++;
       updateState({ ...state, selectedIds: active ? selectedIds.includes(id) ? selectedIds : [...selectedIds, id] : selectedIds.filter(selected => selected !== id), selectionError: undefined, selectionPhase: "editing" });
       await persistSelection();
     },
@@ -211,6 +215,7 @@ export function createSchedulerWorkspace(
           (count, account) => count + account.character_list.length,
           0,
         );
+        selectionRevision++;
         updateState({
           screen: "api-key-connected",
           source: "validated",
