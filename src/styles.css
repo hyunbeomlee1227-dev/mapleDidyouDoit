@@ -275,3 +275,17 @@ h1 {
  .connection-error { color: var(--text); border-left: 3px solid #a32121; padding-left: .75rem; }
  .connection-error small { display: block; }
  :focus-visible { outline: 3px solid #225ca6; outline-offset: 3px; }
+
+.character-selection fieldset { border: 0; padding: 0; min-width: 0; }
+.account-characters { list-style: none; padding: 0; max-height: 320px; overflow-y: auto; }
+.account-characters li { border-bottom: 1px solid var(--border); }
+.character-option { display: flex !important; gap: .75rem; align-items: center; padding: .75rem 0; cursor: pointer; }
+.character-option input { width: 22px; height: 22px; flex-shrink: 0; }
+.character-option small { display: block; color: var(--muted); font-weight: 400; line-height: 1.6; }
+.selected-characters { list-style: none; padding: 0; }
+.selected-characters li { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .5rem 0; border-bottom: 1px solid var(--border); }
+.order-buttons { display: flex; gap: .25rem; flex-shrink: 0; }
+.order-buttons button { background: var(--surface-strong); color: var(--text); border: 1px solid var(--muted); border-radius: 8px; }
+.order-help { font-size: .85rem; color: var(--muted); }
+.character-selection h3 { margin-top: 2rem; }
+@media (max-width: 400px) { .connection-card { padding: 1rem; } }

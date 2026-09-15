@@ -11,13 +11,16 @@ type TestSchedulerWorkspaceOptions = Readonly<{
   nexonResponse?: NexonGatewayResponse;
   networkFailure?: boolean;
   storageFailure?: "load" | "save";
+  storedApiKey?: string;
+  workspaceSaveFailure?: boolean;
+  storedWorkspace?: unknown;
 }>;
 
 export function createTestSchedulerWorkspaceSession(
   options: TestSchedulerWorkspaceOptions = {},
 ) {
-  let storedApiKey: string | null = null;
-  let storedValue: unknown | null = null;
+  let storedApiKey: string | null = options.storedApiKey ?? null;
+  let storedValue: unknown | null = options.storedWorkspace ?? null;
 
   const nexon: NexonGateway = {
     getAccountCharacters: async () => {
@@ -33,6 +36,7 @@ export function createTestSchedulerWorkspaceSession(
   const storage: WorkspaceStorage = {
     load: async () => storedValue,
     save: async (value) => {
+      if (options.workspaceSaveFailure) throw new Error("Workspace storage unavailable");
       storedValue = value;
     },
     clear: async () => {

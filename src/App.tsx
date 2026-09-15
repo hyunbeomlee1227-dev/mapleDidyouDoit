@@ -1,4 +1,5 @@
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { CharacterSelection } from "./CharacterSelection";
 import type { SchedulerWorkspace } from "./workspace/SchedulerWorkspace";
 
 type AppProps = Readonly<{
@@ -9,6 +10,7 @@ export function App({ workspace }: AppProps) {
   const state = useSyncExternalStore(workspace.subscribe, workspace.getState, workspace.getState);
   const [apiKey, setApiKey] = useState("");
   const [showKey, setShowKey] = useState(false);
+  useEffect(() => { void workspace.initialize(); }, [workspace]);
 
   return (
     <div className="app-shell" data-screen={state.screen}>
@@ -37,7 +39,7 @@ export function App({ workspace }: AppProps) {
           {state.screen === "api-key-connected" ? <>
             <h2 id="connection-title">API 키 연결 완료</h2>
             <p role="status">{state.source === "stored" ? "이 브라우저에 저장된 API 키가 연결되어 있습니다." : `계정 캐릭터 ${state.characterCount ?? 0}개를 확인했습니다.`}</p>
-            <p>다음 단계에서 활성 추적 캐릭터를 선택할 수 있습니다.</p>
+            {state.characters ? <CharacterSelection workspace={workspace} state={state} /> : <p role="status">{state.selectionError ?? "저장된 계정 캐릭터를 불러오는 중입니다."}</p>}
           </> : <>
             <h2 id="connection-title">내 계정 연결하기</h2>
             <p>본인의 KMS 계정을 조회할 수 있는 API 키를 입력해 주세요.</p>
