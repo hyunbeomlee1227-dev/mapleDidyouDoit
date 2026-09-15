@@ -1,3 +1,4 @@
+import { useState, useSyncExternalStore } from "react";
 import type { SchedulerWorkspace } from "./workspace/SchedulerWorkspace";
 
 type AppProps = Readonly<{
@@ -5,7 +6,9 @@ type AppProps = Readonly<{
 }>;
 
 export function App({ workspace }: AppProps) {
-  const state = workspace.getState();
+  const state = useSyncExternalStore(workspace.subscribe, workspace.getState, workspace.getState);
+  const [apiKey, setApiKey] = useState("");
+  const [showKey, setShowKey] = useState(false);
 
   return (
     <div className="app-shell" data-screen={state.screen}>
@@ -30,23 +33,39 @@ export function App({ workspace }: AppProps) {
           </p>
         </section>
 
-        <aside className="preview-card" aria-label="서비스 준비 안내">
-          <div className="preview-icon" aria-hidden="true">
-            ✓
-          </div>
-          <div>
-            <p className="preview-title">시작할 준비가 되었어요</p>
-            <p className="preview-description">
-              내 계정의 스케줄러만 안전하게 확인하는 첫 단계를 준비하고
-              있습니다.
-            </p>
-          </div>
-        </aside>
+        <section className="connection-card" aria-labelledby="connection-title">
+          {state.screen === "api-key-connected" ? <>
+            <h2 id="connection-title">API 키 연결 완료</h2>
+            <p role="status">{state.source === "stored" ? "이 브라우저에 저장된 API 키가 연결되어 있습니다." : `계정 캐릭터 ${state.characterCount ?? 0}개를 확인했습니다.`}</p>
+            <p>다음 단계에서 활성 추적 캐릭터를 선택할 수 있습니다.</p>
+          </> : <>
+            <h2 id="connection-title">내 계정 연결하기</h2>
+            <p>본인의 KMS 계정을 조회할 수 있는 API 키를 입력해 주세요.</p>
+            <a href="https://openapi.nexon.com/ko/guide/prepare-in-advance/" target="_blank" rel="noreferrer">넥슨 공식 API 키 발급 안내 ↗</a>
+            <p className="storage-notice" id="storage-notice">검증된 API 키는 이 브라우저에 평문으로 저장됩니다. 공용 기기에서는 사용하지 마세요. 키는 넥슨 API로만 직접 전송되며 서비스 서버에 저장되지 않습니다.</p>
+            <form onSubmit={(event) => {
+              event.preventDefault();
+              void workspace.connectApiKey(apiKey).then(() => {
+                if (workspace.getState().screen === "api-key-connected") setApiKey("");
+              });
+            }}>
+              <label htmlFor="api-key">사용자 API 키</label>
+              <div className="key-field">
+                <input id="api-key" type={showKey ? "text" : "password"} value={apiKey} onChange={(event) => setApiKey(event.target.value)} required autoComplete="off" spellCheck={false} aria-describedby="storage-notice" disabled={state.status === "validating"} />
+                <button type="button" aria-pressed={showKey} onClick={() => setShowKey(!showKey)}>{showKey ? "API 키 숨기기" : "API 키 표시"}</button>
+              </div>
+              {state.error && <p role="alert" className="connection-error">{state.error.message} <small>오류 코드: {state.error.code}</small></p>}
+              <button className="connect-button" disabled={state.status === "validating"} type="submit">{state.status === "validating" ? "확인 중…" : "연결하기"}</button>
+              {state.status === "validating" && <p role="status">API 키를 확인하고 있습니다.</p>}
+            </form>
+          </>}
+        </section>
       </main>
 
       <footer className="site-footer">
         <p>Data based on NEXON Open API</p>
         <p>넥슨의 공식 서비스가 아닙니다</p>
+        <a href="https://github.com/hyunbeomlee1227-dev/mapleDidyouDoit/issues">문제 문의 (API 키를 작성하지 마세요)</a>
       </footer>
     </div>
   );

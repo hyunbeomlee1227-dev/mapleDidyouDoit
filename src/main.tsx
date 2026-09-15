@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 
 import { App } from "./App";
 import "./styles.css";
+import { createBrowserApiKeyStorage } from "./workspace/browser/createBrowserApiKeyStorage";
 import { createBrowserNexonGateway } from "./workspace/browser/createBrowserNexonGateway";
 import { createBrowserWorkspaceStorage } from "./workspace/browser/createBrowserWorkspaceStorage";
 import { createSchedulerWorkspace } from "./workspace/SchedulerWorkspace";
@@ -10,6 +11,7 @@ import { createSchedulerWorkspace } from "./workspace/SchedulerWorkspace";
 const workspace = createSchedulerWorkspace({
   nexon: createBrowserNexonGateway(),
   storage: createBrowserWorkspaceStorage(),
+  apiKeyStorage: createBrowserApiKeyStorage(),
 });
 
 const root = document.getElementById("root");
