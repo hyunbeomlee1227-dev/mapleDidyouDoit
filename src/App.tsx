@@ -41,6 +41,7 @@ export function App({ workspace }: AppProps) {
           </> : <>
             <h2 id="connection-title">내 계정 연결하기</h2>
             <p>본인의 KMS 계정을 조회할 수 있는 API 키를 입력해 주세요.</p>
+            <p>넥슨 Open API에서 로그인한 뒤 애플리케이션을 등록하고 메이플스토리 API 키를 발급받아 복사해 주세요.</p>
             <a href="https://openapi.nexon.com/ko/guide/prepare-in-advance/" target="_blank" rel="noreferrer">넥슨 공식 API 키 발급 안내 ↗</a>
             <p className="storage-notice" id="storage-notice">검증된 API 키는 이 브라우저에 평문으로 저장됩니다. 공용 기기에서는 사용하지 마세요. 키는 넥슨 API로만 직접 전송되며 서비스 서버에 저장되지 않습니다.</p>
             <form onSubmit={(event) => {

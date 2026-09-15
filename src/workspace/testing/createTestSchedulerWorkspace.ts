@@ -10,6 +10,7 @@ import {
 type TestSchedulerWorkspaceOptions = Readonly<{
   nexonResponse?: NexonGatewayResponse;
   networkFailure?: boolean;
+  storageFailure?: "load" | "save";
 }>;
 
 export function createTestSchedulerWorkspaceSession(
@@ -40,8 +41,12 @@ export function createTestSchedulerWorkspaceSession(
   };
 
   const apiKeyStorage: ApiKeyStorage = {
-    load: () => storedApiKey,
+    load: () => {
+      if (options.storageFailure === "load") throw new Error("Storage blocked");
+      return storedApiKey;
+    },
     save: (apiKey) => {
+      if (options.storageFailure === "save") throw new Error("Storage full");
       storedApiKey = apiKey;
     },
     clear: () => {

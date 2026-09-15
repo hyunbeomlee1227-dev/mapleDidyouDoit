@@ -3,6 +3,11 @@ import { describe, expect, it } from "vitest";
 import { createTestSchedulerWorkspaceSession } from "./testing/createTestSchedulerWorkspace";
 
 describe("사용자 API 키 연결", () => {
+  it.each(["load", "save"] as const)("저장소 %s 실패는 앱을 중단하지 않고 저장소 안내를 표시한다", async (storageFailure) => {
+    const session = createTestSchedulerWorkspaceSession({ storageFailure });
+    if (storageFailure === "save") await session.workspace.connectApiKey("test-key");
+    expect(session.workspace.getState()).toMatchObject({ error: { kind: "storage", code: "STORAGE_UNAVAILABLE" } });
+  });
   it("서버 오류를 키 권한 문제로 오해하지 않는다", async () => {
     const { workspace } = createTestSchedulerWorkspaceSession({ nexonResponse: { ok: false, status: 503, body: null } });
     await workspace.connectApiKey("test-key");

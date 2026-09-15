@@ -67,9 +67,18 @@ export function createSchedulerWorkspace(
   dependencies: SchedulerWorkspaceDependencies,
 ): SchedulerWorkspace {
   const listeners = new Set<() => void>();
-  let state: SchedulerWorkspaceState = dependencies.apiKeyStorage.load()
-    ? { screen: "api-key-connected", source: "stored" }
-    : { screen: "connect-api-key", status: "idle" };
+  const storageErrorState: SchedulerWorkspaceState = {
+    screen: "connect-api-key", status: "error",
+    error: { kind: "storage", code: "STORAGE_UNAVAILABLE", message: "브라우저 저장소를 사용할 수 없습니다. 사이트 저장 권한과 남은 공간을 확인한 뒤 다시 연결해 주세요." },
+  };
+  let state: SchedulerWorkspaceState;
+  try {
+    state = dependencies.apiKeyStorage.load()
+      ? { screen: "api-key-connected", source: "stored" }
+      : { screen: "connect-api-key", status: "idle" };
+  } catch {
+    state = storageErrorState;
+  }
 
   const updateState = (nextState: SchedulerWorkspaceState) => {
     state = nextState;
@@ -103,7 +112,12 @@ export function createSchedulerWorkspace(
           return;
         }
 
-        dependencies.apiKeyStorage.save(apiKey);
+        try {
+          dependencies.apiKeyStorage.save(apiKey);
+        } catch {
+          updateState(storageErrorState);
+          return;
+        }
         const characterCount = parsed.data.account_list.reduce(
           (count, account) => count + account.character_list.length,
           0,
