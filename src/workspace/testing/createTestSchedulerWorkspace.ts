@@ -7,7 +7,11 @@ import {
 
 export function createTestSchedulerWorkspace(): SchedulerWorkspace {
   const nexon: NexonGateway = {
-    getAccountCharacters: async () => ({ account_list: [] }),
+    getAccountCharacters: async () => ({
+      ok: true,
+      status: 200,
+      body: { account_list: [] },
+    }),
   };
 
   let storedValue: unknown | null = null;

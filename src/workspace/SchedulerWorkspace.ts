@@ -6,8 +6,14 @@ export interface SchedulerWorkspace {
   getState(): SchedulerWorkspaceState;
 }
 
+export type NexonGatewayResponse = Readonly<{
+  ok: boolean;
+  status: number;
+  body: unknown;
+}>;
+
 export interface NexonGateway {
-  getAccountCharacters(apiKey: string): Promise<unknown>;
+  getAccountCharacters(apiKey: string): Promise<NexonGatewayResponse>;
 }
 
 export interface WorkspaceStorage {
